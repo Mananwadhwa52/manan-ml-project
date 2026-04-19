@@ -160,6 +160,63 @@ with tab3:
                 
                 for rec in recommendations:
                     st.warning(rec)
+                    
+            st.markdown("---")
+            st.subheader("📊 Performance Visualization")
+            
+            # Normalize data to percentage scale for comparable plotting
+            categories = ['Study Hours', 'Attendance', 'Internal Marks', 
+                          'Assignment Marks', 'Previous Marks', 'Participation', 'Project Marks']
+            
+            # Scale variables appropriately for 0-100 visualization
+            scaled_study_hours = (study_hours / 10) * 100
+            scaled_participation = (participation / 10) * 100
+            
+            student_values = [scaled_study_hours, attendance, internal_marks, 
+                              assignment_marks, previous_marks, scaled_participation, project_marks]
+            
+            viz_df = pd.DataFrame({
+                'Score (%)': student_values
+            }, index=['Study Hours (x10)', 'Attendance', 'Internal Marks', 
+                     'Assignment Marks', 'Previous Marks', 'Participation (x10)', 'Project Marks'])
+            
+            col_viz1, col_viz2 = st.columns([2, 1])
+            
+            with col_viz1:
+                st.write("**Student Metrics View (Normalized to 100%)**")
+                st.bar_chart(viz_df, use_container_width=True)
+                
+            with col_viz2:
+                # Gauge-like metric for average profile score
+                avg_score = sum(student_values) / len(student_values)
+                st.metric(label="Profile Score", value=f"{avg_score:.1f}%", 
+                          delta="Strong Profile" if avg_score >= 60 else "Needs Improvement",
+                          delta_color="normal" if avg_score >= 60 else "inverse")
+                
+                # Radar chart using matplotlib
+                import numpy as np
+                import matplotlib.pyplot as plt
+                
+                angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+                angles += angles[:1] # close the loop
+                values = student_values + [student_values[0]] # close the loop
+                
+                fig, ax = plt.subplots(figsize=(4, 4), subplot_kw=dict(polar=True))
+                
+                # Plot outline and fill
+                pass_color = '#2ecc71' if result == 'Pass' else '#e74c3c'
+                ax.plot(angles, values, color=pass_color, linewidth=2)
+                ax.fill(angles, values, color=pass_color, alpha=0.25)
+                
+                # Set axes and labels
+                ax.set_xticks(angles[:-1])
+                ax.set_xticklabels(['Study', 'Attnd', 'Internal', 'Assign', 'Prev', 'Partic', 'Project'], size=8)
+                ax.set_yticks([25, 50, 75, 100])
+                ax.set_yticklabels(['25', '50', '75', '100'], size=7)
+                ax.set_ylim(0, 100)
+                
+                plt.title("Student Strengths", size=10, y=1.1)
+                st.pyplot(fig)
 
 with tab4:
     st.header("Analytics & Insights")
